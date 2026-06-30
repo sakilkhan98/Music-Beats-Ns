@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NS Music Hub - Ultra Sound Engine v3.0</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --accent: #00ff66;
+            --neon-purple: #a855f7;
+            --neon-cyan: #06b6d4;
+            --glass-bg: rgba(6, 6, 9, 0.8);
+            --glass-border: rgba(255, 255, 255, 0.05);
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #020204;
+            color: #f3f4f6;
+            overflow-x: hidden;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .glass-effect {
+            backdrop-filter: blur(40px);
+            -webkit-backdrop-filter: blur(40px);
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+        }
+
+        .premium-card {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.01) 0%, rgba(255, 255, 255, 0.02) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .premium-card:hover {
+            background: linear-gradient(135deg, rgba(0, 255, 102, 0.07) 0%, rgba(168, 85, 247, 0.07) 100%);
+            border-color: var(--accent);
+            transform: translateY(-6px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(0, 255, 102, 0.15), 0 0 15px rgba(168, 85, 247, 0.1);
+        }
+
+        #ambient-layer {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%; z-index: -1;
+            background: radial-gradient(circle at 50% -20%, rgba(0, 255, 102, 0.22) 0%, transparent 50%),
+                        radial-gradient(circle at 10% 80%, rgba(168, 85, 247, 0.15) 0%, transparent 45%),
+                        radial-gradient(circle at 90% 40%, rgba(6, 182, 212, 0.15) 0%, transparent 40%);
+            transition: all 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        input[type="range"] {
+            -webkit-appearance: none; appearance: none;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 99px; cursor: pointer;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none; height: 14px; width: 14px;
+            border-radius: 50%; background: #fff; box-shadow: 0 0 12px var(--accent); transition: transform 0.1s;
+        }
+        input[type="range"]:hover::-webkit-slider-thumb {
+            transform: scale(1.3); background: var(--accent);
+        }
+
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        .animate-fade { animation: fadeIn 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+
+        .shimmer {
+            background: linear-gradient(90deg, rgba(255,255,255,0.01) 25%, rgba(255,255,255,0.05) 50%, rgba(255,255,255,0.01) 75%);
+            background-size: 200% 100%; animation: loading-shimmer 1.5s infinite;
+        }
+        @keyframes loading-shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+        .neon-glow {
+            text-shadow: 0 0 10px rgba(0, 255, 102, 0.6), 0 0 20px rgba(0, 255, 102, 0.3);
+        }
+    </style>
+</head>
+<body class="h-screen flex flex-col overflow-hidden select-none">
+
+    <!-- WELCOME SPLASH INFRASTRUCTURE -->
+    <div id="welcome-splash" class="fixed inset-0 z-[100] bg-[#020204] flex flex-col items-center justify-center p-6 text-center transition-all duration-700 ease-in-out">
+        <div class="absolute inset-0 z-[-1]" style="background: radial-gradient(circle at center, rgba(0,255,102,0.15) 0%, transparent 70%);"></div>
+        <div class="space-y-6 max-w-sm animate-fade">
+            <div class="w-20 h-20 mx-auto bg-gradient-to-tr from-green-400 via-cyan-400 to-purple-600 rounded-3xl flex items-center justify-center shadow-2xl shadow-green-500/30">
+                <i data-lucide="music-3" class="w-10 h-10 text-black stroke-[2.5]"></i>
+            </div>
+            <div>
+                <h2 class="text-2xl font-black tracking-tight text-white">Welcome to</h2>
+                <h1 class="text-3xl font-black text-[#00ff66] neon-glow tracking-wide mt-1">NS Music 🎵 Hub</h1>
+                <p class="text-xs text-gray-400 mt-2">Ultra Pure Streaming & Engine Matrix</p>
+            </div>
+            
+            <div class="p-4 rounded-2xl bg-white/5 border border-white/5 backdrop-blur-md">
+                <p class="text-[11px] font-bold text-blue-400 flex items-center justify-center gap-1.5 uppercase tracking-wider">
+                    <i data-lucide="send" class="w-3.5 h-3.5 fill-current"></i> Telegram Community
+                </p>
+                <p class="text-[10px] text-gray-400 mt-1.5 leading-relaxed">সবচেয়ে আগে লেটেস্ট আপডেট, মড প্রিমিয়াম ফিচার এবং ভিডিও প্লেয়ার সংস্করণ পেতে জয়েন করুন!</p>
+                <a href="https://t.me/Sharechat_ns_098" target="_blank" class="mt-3 block w-full bg-gradient-to-r from-blue-500 to-sky-400 text-black font-black text-xs py-2.5 rounded-xl hover:scale-105 transition-all shadow-lg shadow-blue-500/20">
+                    Join Official Telegram
+                </a>
+            </div>
+
+            <button onclick="App.ui.dismissSplash()" class="w-full bg-white/10 hover:bg-white/20 text-white font-bold text-xs py-3 rounded-xl border border-white/10 tracking-wide transition-all uppercase shadow-md mt-2">
+                Skip & Continue to Engine →
+            </button>
+        </div>
+    </div>
+
+    <!-- INSIDE MENU POPUP LAYER (MODAL) -->
+    <div id="inside-menu-modal" class="fixed inset-0 z-[90] bg-black/60 backdrop-blur-md flex items-center justify-center p-4 hidden opacity-0 transition-all duration-300">
+        <div class="bg-[#0b0b11] border border-white/10 rounded-3xl max-w-md w-full p-6 space-y-5 relative shadow-2xl shadow-purple-500/10">
+            <button onclick="App.ui.toggleInsideMenu(false)" class="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+            <div class="text-center space-y-2">
+                <div class="w-14 h-14 mx-auto rounded-2xl bg-gradient-to-tr from-purple-500 to-cyan-400 flex items-center justify-center text-lg font-black text-white shadow-lg">
+                    SK
+                </div>
+                <div>
+                    <h3 class="text-lg font-black text-white">SakiL Khan</h3>
+                    <p class="text-[10px] text-green-400 font-extrabold tracking-widest uppercase">System Architect & Dev</p>
+                </div>
+            </div>
+            <div class="p-4 rounded-xl bg-white/5 border border-white/5 space-y-2.5">
+                <h4 class="text-xs font-black text-purple-400 uppercase tracking-wider flex items-center gap-1.5">
+                    <i data-lucide="terminal" class="w-3.5 h-3.5"></i> Developer Pipeline Notes
+                </h4>
+                <p class="text-xs text-gray-300 leading-relaxed">
+                    Welcome to the internal core engine controls. <span class="text-[#00ff66] font-bold">NS Music Hub</span> delivers pure cloud-buffered high-fidelity audio mapping directly to your client player terminal.
+                </p>
+                <div class="p-3 bg-purple-950/30 border border-purple-500/20 rounded-lg text-center">
+                    <p class="text-[10px] font-black text-purple-300 tracking-wide uppercase">⚡ Version Roadmap ⚡</p>
+                    <p class="text-[11px] text-gray-400 mt-1 italic leading-snug">"Next version is coming soon with Video Songs Player, live lyrics parsing, custom equalizer, and everything you need!"</p>
+                </div>
+            </div>
+            <div class="space-y-2">
+                <p class="text-[10px] text-gray-400 text-center font-bold">Stay connected for high-frequency updates:</p>
+                <a href="https://t.me/Sharechat_ns_098" target="_blank" class="flex items-center justify-center gap-2 w-full bg-blue-500 hover:bg-blue-600 text-black font-black text-xs py-3 rounded-xl transition-all shadow-md shadow-blue-500/20">
+                    <i data-lucide="send" class="w-4 h-4 fill-current"></i> Join Official Telegram Channel
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- TOAST NOTIFICATION CONTAINER -->
+    <div id="toast-container" class="fixed bottom-28 left-1/2 -translate-x-1/2 z-[110] pointer-events-none transition-all duration-500 transform translate-y-10 opacity-0">
+        <div class="glass-effect px-5 py-3 rounded-full border border-green-500/30 flex items-center space-x-2.5 shadow-xl shadow-green-500/10">
+            <span class="flex h-2 w-2 relative">
+                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+            </span>
+            <p class="text-xs font-bold text-white tracking-wide whitespace-nowrap">
+                ⚡ Application Core Active — <span class="text-[#00ff66] font-black">Made by SakiL Khan</span>
+            </p>
+        </div>
+    </div>
+
+    <div id="ambient-layer"></div>
+
+    <!-- MAIN CORE CONTAINER INTERFACE -->
+    <div class="flex flex-1 h-full w-full relative overflow-hidden pb-24">
+        
+        <!-- SIDEBAR CONTAINER -->
+        <aside class="w-68 glass-effect m-4 mr-0 rounded-3xl hidden md:flex flex-col justify-between p-5 z-20 overflow-y-auto no-scrollbar">
+            <div class="space-y-6">
+                
+                <!-- BRAND BRAND LOGO CORE -->
+                <div class="flex items-center space-x-3 px-1">
+                    <div class="relative w-11 h-11 bg-gradient-to-tr from-green-400 via-cyan-400 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg shadow-green-500/20 group overflow-hidden flex-shrink-0">
+                        <span class="font-black text-xs text-black tracking-tighter filter drop-shadow-md">MRK</span>
+                    </div>
+                    <div class="truncate">
+                        <h1 class="font-black text-sm tracking-tight bg-gradient-to-r from-yellow-400 via-white to-gray-400 bg-clip-text text-transparent uppercase truncate">
+                            MRK RASHID
+                        </h1>
+                        <p class="text-[9px] text-[#00ff66] font-extrabold tracking-widest uppercase">NS Music Core</p>
+                    </div>
+                </div>
+
+                <!-- NAVIGATION DIRECTORY WITH MENU OPTIONS -->
+                <nav class="space-y-1">
+                    <p class="px-3 text-[10px] font-black text-gray-500 uppercase tracking-widest mb-2">Navigation Menu</p>
+                    <button onclick="App.router.navigate('home')" data-nav="home" class="nav-btn w-full flex items-center space-x-3 px-4 py-3 rounded-xl font-bold text-sm transition-all text-green-400 bg-white/5">
+                        <i data-lucide="activity" class="w-4 h-4"></i>
+                        <span>Acoustic Grid</span>
+                    </button>
+                    <button onclick="App.router.navigate('search')" data-nav="search" class="nav-btn w-full flex items-center space-x-3 px-4 py-3 rounded-xl font-bold text-sm transition-all text-gray-400 hover:text-white hover:bg-white/5">
+                        <i data-lucide="search" class="w-4 h-4"></i>
+                        <span>Advanced Search</span>
+                    </button>
+                    <button onclick="App.router.navigate('library')" data-nav="library" class="nav-btn w-full flex items-center space-x-3 px-4 py-3 rounded-xl font-bold text-sm transition-all text-gray-400 hover:text-white hover:bg-white/5">
+                        <i data-lucide="heart" class="w-4 h-4"></i>
+                        <span>Saved Records</span>
+                    </button>
+                    <button onclick="App.ui.toggleInsideMenu(true)" class="w-full flex items-center space-x-3 px-4 py-3 rounded-xl font-bold text-sm transition-all text-gray-400 hover:text-white hover:bg-white/5">
+                        <i data-lucide="sliders" class="w-4 h-4"></i>
+                        <span>⚙️ Inside Menu</span>
+                    </button>
+                </nav>
+
+                <!-- TELEGRAM SIDEBAR QUICK DOCK -->
+                <div class="p-3.5 rounded-2xl bg-gradient-to-br from-blue-600/20 via-cyan-500/5 to-transparent border border-blue-500/20 text-center">
+                    <p class="text-xs font-black text-blue-400 flex items-center justify-center gap-1.5 uppercase tracking-wide">
+                        <i data-lucide="send" class="w-3 h-3 fill-current"></i> Join Community
+                    </p>
+                    <a href="https://t.me/Sharechat_ns_098" target="_blank" class="mt-2.5 block w-full bg-blue-500 hover:bg-blue-600 text-black font-black text-[10px] py-2 rounded-xl transition-all shadow-md shadow-blue-500/20 truncate">
+                        Join Telegram
+                    </a>
+                </div>
+            </div>
+
+            <!-- PREMIUM DEV COMPONENT PANEL -->
+            <div class="border-t border-white/5 pt-4 mt-4 space-y-3">
+                <div class="p-3 bg-white/5 border border-white/5 rounded-2xl flex items-center space-x-2.5">
+                    <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-purple-500 to-pink-500 flex items-center justify-center text-xs font-black text-white shadow-md">SK</div>
+                    <div>
+                        <p class="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Engineered By</p>
+                        <h4 class="text-xs font-black text-white tracking-wide">SakiL Khan</h4>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- VIEW WRAPPER DISPLAY PORT -->
+        <main id="main-scroll" class="flex-1 flex flex-col overflow-y-auto px-4 md:px-8 pt-5 pb-12">
+            <!-- HEADER ARCHITECTURE -->
+            <header class="flex items-center justify-between mb-4 sticky top-0 bg-[#020204]/50 backdrop-blur-xl py-3.5 z-30 border-b border-white/5">
+                
+                <!-- HEADER MINI LOGO FOR MOBILE/DESKTOP -->
+                <div class="flex items-center space-x-2 mr-3 flex-shrink-0">
+                    <div class="w-8 h-8 rounded-xl bg-gradient-to-r from-[#00ff66] to-cyan-400 flex items-center justify-center text-black font-black text-xs shadow-md shadow-green-500/10">
+                        NS
+                    </div>
+                    <span class="hidden lg:inline-block font-extrabold text-xs tracking-wider text-white uppercase">
+                        Matrix Engine
+                    </span>
+                </div>
+
+                <div class="w-full max-w-xs sm:max-w-sm relative">
+                    <i data-lucide="search" class="absolute left-4 top-3.5 w-4 h-4 text-gray-400"></i>
+                    <input type="text" id="top-search" placeholder="Search DJ Remix, Sad Vibes..." 
+                           class="w-full bg-white/5 border border-white/5 rounded-full pl-11 pr-4 py-2.5 text-xs focus:outline-none focus:border-green-400 focus:bg-white/10 transition-all text-white font-medium">
+                </div>
+                
+                <div class="flex items-center space-x-2 ml-2 flex-shrink-0">
+                    <button onclick="App.ui.toggleInsideMenu(true)" class="flex items-center space-x-1 px-3 py-2 bg-white/5 border border-white/10 rounded-full text-xs font-bold text-gray-300 hover:text-white hover:bg-white/10 transition-all">
+                        <i data-lucide="settings" class="w-3.5 h-3.5"></i>
+                        <span class="hidden sm:inline">Menu Node</span>
+                    </button>
+                    <span class="text-[9px] sm:text-[10px] bg-gradient-to-r from-green-500/20 via-cyan-500/10 to-purple-500/20 border border-green-500/30 text-green-400 px-3 py-2 rounded-full font-black tracking-widest uppercase shadow-md">● V3.0</span>
+                </div>
+            </header>
+
+            <!-- VIEWPORT LAYOUT ROOT -->
+            <div id="viewport" class="animate-fade"></div>
+        </main>
+    </div>
+
+    <!-- PREMUM AUDIO DISPATCHER FOOTER DOCK -->
+    <footer class="fixed bottom-0 left-0 right-0 h-24 glass-effect border-t border-white/5 z-50 px-4 md:px-8 flex items-center justify-between">
+        <!-- Track Art & Metadata -->
+        <div class="flex items-center space-x-3 w-1/3 sm:w-1/4 min-w-[160px]">
+            <div class="relative group flex-shrink-0">
+                <img id="track-art" src="https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?q=80&w=150" class="w-12 h-12 sm:w-14 sm:h-14 object-cover rounded-xl border border-white/10 shadow-md">
+                <div class="absolute inset-0 bg-black/40 rounded-xl opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all cursor-pointer" onclick="App.ui.triggerDownloadCurrent()">
+                    <i data-lucide="download" class="w-4 h-4 text-green-400"></i>
+                </div>
+            </div>
+            <div class="truncate">
+                <h4 id="track-title" class="font-bold text-xs sm:text-sm text-white truncate shadow-sm">NS Audio Node</h4>
+                <p id="track-artist" class="text-[10px] sm:text-xs text-gray-400 truncate mt-0.5">Select Content</p>
+            </div>
+            <button onclick="App.library.toggleFav()" class="text-gray-400 hover:text-red-500 transition-colors flex-shrink-0 ml-1">
+                <i data-lucide="heart" id="fav-icon" class="w-4 h-4"></i>
+            </button>
+        </div>
+
+        <!-- Master Pipeline Control Matrix -->
+        <div class="flex flex-col items-center space-y-2 flex-1 max-w-xl px-2">
+            <div class="flex items-center space-x-6">
+                <button onclick="App.audio.prev()" class="text-gray-400 hover:text-white transition-colors"><i data-lucide="skip-back" class="w-5 h-5 fill-current"></i></button>
+                <button id="master-play-btn" onclick="App.audio.toggle()" class="w-11 h-11 bg-white text-black rounded-full flex items-center justify-center transform hover:scale-105 transition-all shadow-xl shadow-green-400/10">
+                    <i data-lucide="play" class="w-5 h-5 fill-current ml-0.5"></i>
+                </button>
+                <button onclick="App.audio.next()" class="text-gray-400 hover:text-white transition-colors"><i data-lucide="skip-forward" class="w-5 h-5 fill-current"></i></button>
+            </div>
+            <div class="w-full flex items-center space-x-3 text-[10px] text-gray-400 font-extrabold tracking-tight">
+                <span id="time-curr">0:00</span>
+                <input type="range" id="seek-bar" min="0" max="100" value="0" class="w-full h-1 accent-[#00ff66]">
+                <span id="time-dur">0:00</span>
+            </div>
+        </div>
+
+        <!-- Download & Auxiliary Engine Action Hub -->
+        <div class="flex items-center justify-end space-x-4 w-1/4">
+            <button id="master-download-btn" onclick="App.ui.triggerDownloadCurrent()" class="hidden lg:flex items-center space-x-1.5 px-3 py-2 bg-white/5 hover:bg-white/10 border border-white/5 hover:border-green-500/30 text-xs font-bold rounded-xl text-gray-300 hover:text-green-400 transition-all">
+                <i data-lucide="download-cloud" class="w-4 h-4"></i>
+                <span>Download MP3</span>
+            </button>
+            <div class="hidden sm:flex items-center space-x-2">
+                <i data-lucide="volume-2" class="w-4 h-4 text-gray-400"></i>
+                <input type="range" id="volume-bar" min="0" max="1" step="0.05" value="0.8" class="w-16 h-1 accent-[#00ff66]">
+            </div>
+        </div>
+    </footer>
+
+    <!-- MOBILE NAVIGATION HUD OVERLAY -->
+    <nav class="fixed bottom-0 left-0 right-0 h-16 bg-[#020204]/95 backdrop-blur-2xl border-t border-white/5 flex items-center justify-around md:hidden z-40">
+        <button onclick="App.router.navigate('home')" class="flex flex-col items-center text-green-400"><i data-lucide="grid" class="w-5 h-5"></i><span class="text-[9px] mt-1 font-bold">Grid</span></button>
+        <button onclick="App.router.navigate('search')" class="flex flex-col items-center text-gray-400"><i data-lucide="search" class="w-5 h-5"></i><span class="text-[9px] mt-1 font-bold">Search</span></button>
+        <button onclick="App.router.navigate('library')" class="flex flex-col items-center text-gray-400"><i data-lucide="heart" class="w-5 h-5"></i><span class="text-[9px] mt-1 font-bold">Saved</span></button>
+        <button onclick="App.ui.toggleInsideMenu(true)" class="flex flex-col items-center text-gray-400"><i data-lucide="sliders" class="w-5 h-5"></i><span class="text-[9px] mt-1 font-bold">Menu</span></button>
+        <a href="https://t.me/Sharechat_ns_098" target="_blank" class="flex flex-col items-center text-blue-400"><i data-lucide="send" class="w-5 h-5"></i><span class="text-[9px] mt-1 font-bold">Join</span></a>
+    </nav>
+
+    <!-- PROCESSING ARCHITECTURE ENGINE SCRIPT -->
+    <script>
+        const AIRBEATS_BASE_URL = 'https://api.airbeats.xyz/api';
+
+        class LiveMusicApp {
+            constructor() {
+                this.state = {
+                    currentTrack: null,
+                    queue: [],
+                    currentIndex: 0,
+                    isPlaying: false,
+                    favorites: JSON.parse(localStorage.getItem('airbeats_favs')) || []
+                };
+            }
+
+            async init() {
+                this.audio = new LiveAudioEngine(this);
+                this.router = new DynamicClientRouter(this);
+                this.library = new LocalLibraryManager(this);
+                this.ui = new UIUXInteractionHandler(this);
+
+                lucide.createIcons();
+                this.ui.bindEvents();
+                this.router.navigate('home');
+            }
+        }
+
+        class LiveAudioEngine {
+            constructor(app) {
+                this.app = app;
+                this.core = new Audio();
+                this.isSeekingUnbound = false;
+                this.setupListeners();
+            }
+
+            setupListeners() {
+                this.core.addEventListener('timeupdate', () => {
+                    if (this.isSeekingUnbound) return;
+                    const pct = (this.core.currentTime / this.core.duration) * 100 || 0;
+                    document.getElementById('seek-bar').value = pct;
+                    document.getElementById('time-curr').textContent = this.fmtTime(this.core.currentTime);
+                });
+
+                this.core.addEventListener('durationchange', () => {
+                    document.getElementById('time-dur').textContent = this.fmtTime(this.core.duration);
+                });
+
+                this.core.addEventListener('ended', () => this.next());
+            }
+
+            loadAndPlay(track, sourceQueue) {
+                if (sourceQueue && sourceQueue.length > 0) {
+                    this.app.state.queue = [...sourceQueue];
+                    this.app.state.currentIndex = this.app.state.queue.findIndex(t => t.id === track.id);
+                    if (this.app.state.currentIndex === -1) this.app.state.currentIndex = 0;
+                }
+
+                this.app.state.currentTrack = track;
+                
+                const audioUrl = this.getStreamUrl(track);
+                const coverUrl = track.image?.find(i => i.quality === "500x500")?.url || 
+                                 track.image?.find(i => i.quality === "150x150")?.url || track.image[0]?.url;
+
+                this.core.src = audioUrl;
+                this.core.load();
+
+                document.getElementById('track-title').textContent = track.name;
+                document.getElementById('track-artist').textContent = track.artists?.primary?.map(a => a.name).join(', ') || 'NS Node Engine';
+                document.getElementById('track-art').src = coverUrl;
+
+                this.play();
+                this.app.ui.updateFavButtonUI();
+                this.app.ui.mutateAmbientBackground();
+            }
+
+            getStreamUrl(track) {
+                return track.downloadUrl?.find(d => d.quality === "320kbps")?.url || 
+                       track.downloadUrl?.find(d => d.quality === "160kbps")?.url || 
+                       track.downloadUrl[track.downloadUrl.length - 1]?.url;
+            }
+
+            play() {
+                this.core.play().then(() => {
+                    this.app.state.isPlaying = true;
+                    this.updateUI();
+                }).catch(e => console.warn("Acoustic node sequence interrupt requested", e));
+            }
+
+            pause() {
+                this.core.pause();
+                this.app.state.isPlaying = false;
+                this.updateUI();
+            }
+
+            toggle() {
+                if (!this.app.state.currentTrack && this.app.state.queue.length > 0) {
+                    this.loadAndPlay(this.app.state.queue[0]);
+                    return;
+                }
+                if (this.app.state.isPlaying) this.pause();
+                else this.play();
+            }
+
+            next() {
+                if (this.app.state.queue.length === 0) return;
+                this.app.state.currentIndex = (this.app.state.currentIndex + 1) % this.app.state.queue.length;
+                this.loadAndPlay(this.app.state.queue[this.app.state.currentIndex]);
+            }
+
+            prev() {
+                if (this.app.state.queue.length === 0) return;
+                this.app.state.currentIndex = (this.app.state.currentIndex - 1 + this.app.state.queue.length) % this.app.state.queue.length;
+                this.loadAndPlay(this.app.state.queue[this.app.state.currentIndex]);
+            }
+
+            fmtTime(secs) {
+                if (isNaN(secs)) return "0:00";
+                const m = Math.floor(secs / 60);
+                const s = Math.floor(secs % 60).toString().padStart(2, '0');
+                return `${m}:${s}`;
+            }
+
+            updateUI() {
+                const btn = document.getElementById('master-play-btn');
+                btn.innerHTML = this.app.state.isPlaying ? `<i data-lucide="pause" class="w-5 h-5 fill-current"></i>` : `<i data-lucide="play" class="w-5 h-5 fill-current ml-0.5"></i>`;
+                lucide.createIcons();
+            }
+        }
+
+        class DynamicClientRouter {
+            constructor(app) {
+                this.app = app;
+                this.viewport = document.getElementById('viewport');
+                this.cachedHomeResults = [];
+                this.cachedSearchResults = [];
+                this.activeCategory = 'latest';
+            }
+
+            async navigate(view) {
+                document.querySelectorAll('.nav-btn').forEach(b => {
+                    const isTarget = b.getAttribute('data-nav') === view;
+                    b.classList.toggle('text-green-400', isTarget);
+                    b.classList.toggle('bg-white/5', isTarget);
+                });
+
+                this.viewport.innerHTML = `<div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 pt-4">` + 
+                    Array(12).fill('<div class="shimmer h-48 rounded-2xl"></div>').join('') + `</div>`;
+
+                if (view === 'home') this.renderHome(this.activeCategory);
+                else if (view === 'search') this.renderSearch();
+                else if (view === 'library') this.renderLibrary();
+            }
+
+            async renderHome(keyword = 'latest') {
+                this.activeCategory = keyword;
+                try {
+                    const res = await fetch(`${AIRBEATS_BASE_URL}/search/songs?query=${encodeURIComponent(keyword)}&limit=50`);
+                    const json = await res.json();
+                    if(json.success && json.data.results) {
+                        this.cachedHomeResults = json.data.results;
+                        
+                        const pills = [
+                            { id: 'latest', name: 'Trending' },
+                            { id: 'hindi dj remix song', name: 'Hindi DJ Remix' },
+                            { id: 'bangla dj remix song', name: 'Bangla DJ Remix' },
+                            { id: 'sad vibes', name: 'Sad Vibes' },
+                            { id: 'bangla golpo audio story', name: 'Bangla Golpo 📖' },
+                            { id: 'lofi mp3 chill', name: 'Lofi Vibes' }
+                        ];
+
+                        const pillsMarkup = pills.map(p => {
+                            const isAct = this.activeCategory === p.id;
+                            return `<button onclick="App.router.renderHome('${p.id}')" class="px-4 py-2 text-xs font-black rounded-full whitespace-nowrap transition-all ${isAct ? 'bg-gradient-to-r from-green-400 to-cyan-400 text-black shadow-md shadow-green-500/20' : 'bg-white/5 text-gray-300 hover:bg-white/10'}">${p.name}</button>`;
+                        }).join('');
+
+                        this.viewport.innerHTML = `
+                            <div class="flex items-center space-x-2 overflow-x-auto pb-4 mb-4 no-scrollbar border-b border-white/5">${pillsMarkup}</div>
+                            <div class="mb-5">
+                                <h2 class="text-xl font-black text-white capitalize tracking-tight">Acoustic Matrix Engine</h2>
+                                <p class="text-xs text-gray-400">Direct 50+ High Fidelity Ultra Streams Activated</p>
+                            </div>
+                            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 animate-fade">${this.buildGrid(this.cachedHomeResults, 'home')}</div>
+                        `;
+                    }
+                } catch (e) {
+                    this.viewport.innerHTML = `<p class="text-sm text-red-400 italic">Core Node Connection Exception. Please retry pipeline sync.</p>`;
+                }
+                lucide.createIcons();
+            }
+
+            renderSearch() {
+                this.viewport.innerHTML = `
+                    <div class="space-y-6 animate-fade">
+                        <div class="relative w-full">
+                            <i data-lucide="search" class="absolute left-4 top-4 w-5 h-5 text-gray-400"></i>
+                            <input type="text" id="live-search-input" placeholder="Search Hindi Remix, Bangla DJ, Sad Song, Golpo MP3..." 
+                                   class="w-full bg-white/5 border border-white/10 rounded-2xl pl-12 pr-4 py-4 text-sm focus:outline-none focus:border-green-400 focus:bg-white/10 transition-all text-white font-semibold">
+                        </div>
+                        <div id="live-search-output" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                             <p class="text-xs text-gray-500 italic col-span-full">Acoustic query pipeline ready. Insert string variables above...</p>
+                        </div>
+                    </div>
+                `;
+                lucide.createIcons();
+
+                const input = document.getElementById('live-search-input');
+                if(input) {
+                    input.focus();
+                    input.addEventListener('input', this.app.ui.debounce(async (e) => {
+                        const query = e.target.value.trim();
+                        if (query.length < 2) return;
+                        const out = document.getElementById('live-search-output');
+                        out.innerHTML = Array(12).fill('<div class="shimmer h-48 rounded-2xl"></div>').join('');
+                        
+                        try {
+                            const res = await fetch(`${AIRBEATS_BASE_URL}/search/songs?query=${encodeURIComponent(query)}&limit=50`);
+                            const json = await res.json();
+                            if (json.success && json.data.results.length > 0) {
+                                this.cachedSearchResults = json.data.results;
+                                out.innerHTML = this.buildGrid(json.data.results, 'search');
+                            } else {
+                                out.innerHTML = `<p class="text-xs text-gray-500 italic col-span-full">Zero valid records found matching context.</p>`;
+                            }
+                        } catch(err) {
+                            out.innerHTML = `<p class="text-xs text-red-400 col-span-full">Pipeline stream resolution processing fault.</p>`;
+                        }
+                        lucide.createIcons();
+                    }, 450));
+                }
+            }
+
+            renderLibrary() {
+                if (this.app.state.favorites.length === 0) {
+                    this.viewport.innerHTML = `<div class="p-8 text-center text-gray-500 italic text-xs animate-fade">Your offline mapped registry contains zero saved entries.</div>`;
+                    return;
+                }
+                this.viewport.innerHTML = `
+                    <div class="mb-5"><h2 class="text-xl font-black text-white">Saved Local Registry Nodes</h2></div>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 animate-fade">${this.buildGrid(this.app.state.favorites, 'library')}</div>
+                `;
+                lucide.createIcons();
+            }
+
+            buildGrid(tracks, scope) {
+                return tracks.map((t, idx) => {
+                    const cover = t.image?.find(i => i.quality === "150x150")?.url || t.image[0]?.url || '';
+                    const artist = t.artists?.primary?.[0]?.name || 'NS Music Node';
+                    return `
+                        <div class="premium-card p-3 rounded-2xl cursor-pointer group flex flex-col justify-between relative">
+                            <div onclick="App.ui.playFromScope('${scope}', ${idx})" class="relative overflow-hidden rounded-xl aspect-square mb-2.5">
+                                <img src="${cover}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                                <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                                    <button class="w-10 h-10 bg-gradient-to-r from-green-400 to-cyan-400 text-black rounded-full flex items-center justify-center transform scale-90 group-hover:scale-100 transition-transform shadow-lg shadow-green-500/30"><i data-lucide="play" class="w-4 h-4 fill-current ml-0.5"></i></button>
+                                </div>
+                            </div>
+                            <div class="px-0.5 flex items-start justify-between gap-1 w-full">
+                                <div class="truncate flex-1" onclick="App.ui.playFromScope('${scope}', ${idx})">
+                                    <h4 class="font-bold text-xs truncate text-white group-hover:text-green-400 transition-colors">${t.name}</h4>
+                                    <p class="text-[10px] text-gray-400 truncate mt-0.5">${artist}</p>
+                                </div>
+                                <button onclick="App.ui.triggerDownloadDirect('${scope}', ${idx})" class="text-gray-400 hover:text-green-400 p-1.5 rounded-xl bg-white/5 hover:bg-white/10 transition-all flex-shrink-0" title="Download High Quality MP3">
+                                    <i data-lucide="arrow-down-to-line" class="w-3.5 h-3.5"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+        }
+
+        class LocalLibraryManager {
+            constructor(app) { this.app = app; }
+
+            toggleFav() {
+                const track = this.app.state.currentTrack;
+                if (!track) return;
+
+                const foundIdx = this.app.state.favorites.findIndex(f => f.id === track.id);
+                if (foundIdx > -1) {
+                    this.app.state.favorites.splice(foundIdx, 1);
+                } else {
+                    this.app.state.favorites.push(track);
+                }
+                localStorage.setItem('airbeats_favs', JSON.stringify(this.app.state.favorites));
+                this.app.ui.updateFavButtonUI();
+            }
+        }
+
+        class UIUXInteractionHandler {
+            constructor(app) { this.app = app; }
+
+            bindEvents() {
+                const seek = document.getElementById('seek-bar');
+                seek.addEventListener('input', () => this.app.audio.isSeekingUnbound = true);
+                seek.addEventListener('change', (e) => {
+                    const targetTime = (e.target.value / 100) * this.app.audio.core.duration;
+                    if (!isNaN(targetTime)) this.app.audio.core.currentTime = targetTime;
+                    this.app.audio.isSeekingUnbound = false;
+                });
+
+                document.getElementById('top-search').addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        const q = e.target.value;
+                        this.app.router.navigate('search');
+                        setTimeout(() => {
+                            const inp = document.getElementById('live-search-input');
+                            if(inp) { inp.value = q; inp.dispatchEvent(new Event('input')); }
+                        }, 150);
+                    }
+                });
+
+                document.getElementById('volume-bar').addEventListener('input', (e) => {
+                    this.app.audio.core.volume = e.target.value;
+                });
+            }
+
+            dismissSplash() {
+                const splash = document.getElementById('welcome-splash');
+                if (splash) {
+                    splash.style.opacity = '0';
+                    splash.style.pointerEvents = 'none';
+                    setTimeout(() => {
+                        splash.remove();
+                        this.showToastNotification();
+                    }, 700);
+                }
+            }
+
+            toggleInsideMenu(show) {
+                const modal = document.getElementById('inside-menu-modal');
+                if(show) {
+                    modal.classList.remove('hidden');
+                    setTimeout(() => {
+                        modal.classList.remove('opacity-0');
+                    }, 50);
+                } else {
+                    modal.classList.add('opacity-0');
+                    setTimeout(() => {
+                        modal.classList.add('hidden');
+                    }, 300);
+                }
+            }
+
+            showToastNotification() {
+                const toast = document.getElementById('toast-container');
+                toast.classList.remove('opacity-0', 'translate-y-10');
+                
+                setTimeout(() => {
+                    toast.classList.add('opacity-0', 'translate-y-10');
+                }, 4500);
+            }
+
+            playFromScope(scope, index) {
+                let list = this.getListFromScope(scope);
+                if (list.length > 0) this.app.audio.loadAndPlay(list[index], list);
+            }
+
+            getListFromScope(scope) {
+                if (scope === 'home') return this.app.router.cachedHomeResults;
+                if (scope === 'search') return this.app.router.cachedSearchResults;
+                if (scope === 'library') return this.app.state.favorites;
+                return [];
+            }
+
+            triggerDownloadCurrent() {
+                if(!this.app.state.currentTrack) return;
+                const url = this.app.audio.getStreamUrl(this.app.state.currentTrack);
+                this.executeDownload(url, this.app.state.currentTrack.name);
+            }
+
+            triggerDownloadDirect(scope, index) {
+                let list = this.getListFromScope(scope);
+                if(list.length > 0) {
+                    const track = list[index];
+                    const url = this.app.audio.getStreamUrl(track);
+                    this.executeDownload(url, track.name);
+                }
+            }
+
+            executeDownload(url, filename) {
+                if(!url) return;
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `${filename}.mp3`;
+                a.target = '_blank';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+            }
+
+            mutateAmbientBackground() {
+                document.getElementById('ambient-layer').style.background = `
+                    radial-gradient(circle at 50% -20%, rgba(0, 255, 102, 0.25) 0%, transparent 60%),
+                    radial-gradient(circle at 10% 80%, rgba(168, 85, 247, 0.18) 0%, #020204 100%)
+                `;
+            }
+
+            updateFavButtonUI() {
+                const icon = document.getElementById('fav-icon');
+                if (!icon || !this.app.state.currentTrack) return;
+                const isFav = this.app.state.favorites.some(f => f.id === this.app.state.currentTrack.id);
+                icon.className = isFav ? "w-4 h-4 text-red-500 fill-current" : "w-4 h-4 text-gray-400";
+            }
+
+            debounce(func, delay) {
+                let timer;
+                return function (...args) {
+                    clearTimeout(timer);
+                    timer = setTimeout(() => func.apply(this, args), delay);
+                };
+            }
+        }
+
+        const App = new LiveMusicApp();
+        window.addEventListener('DOMContentLoaded', () => App.init());
+    </script>
+</body>
+</html>
